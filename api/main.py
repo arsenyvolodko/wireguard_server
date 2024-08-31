@@ -10,12 +10,12 @@ app = FastAPI()
 app.add_middleware(LoggingMiddleware)  # type: ignore
 
 
-@app.post("/api/v1/client/{clientId}", status_code=200)
+@app.post("/api/v1/client/{client_id}", status_code=200)
 async def add_client(request: Request, client_id: int, x_api_key: str = Header(None)):
     await _handle_request_util(request, client_id, x_api_key)
 
 
-@app.delete("/api/v1/client/{clientId}", status_code=200)
+@app.delete("/api/v1/client/{client_id}", status_code=200)
 async def remove_client(request: Request, client_id: int, x_api_key: str = Header(None)):
     await _handle_request_util(request, client_id, x_api_key)
 
