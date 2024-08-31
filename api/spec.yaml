@@ -1,0 +1,58 @@
+openapi: 3.0.1
+info:
+  title: Wireguard Server
+  version: '1.0'
+paths:
+  /api/v1/client/{clientId}:
+    post:
+      summary: Add client
+      tags:
+        - client
+      parameters:
+        - name: clientId
+          in: query
+          description: client's id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientRequest'
+      responses:
+        200:
+          description: Successful operation
+    delete:
+      summary: Delete client
+      tags:
+        - client
+      parameters:
+        - name: clientId
+          in: query
+          description: client's id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientRequest'
+      responses:
+        200:
+          description: successful operation
+components:
+  schemas:
+    ClientRequest:
+      required:
+        - deviceNum
+        - publicKey
+        - ip
+      properties:
+        deviceNum:
+          type: integer
+        publicKey:
+          type: string
+        ip:
+          type: string
