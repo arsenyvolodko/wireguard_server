@@ -3,6 +3,9 @@
 ### Description
 Fast Api server for handling wireguard clients
 
+### API Specification
+see [spec.yml](api/spec.yaml)
+
 ### Set Up
 1. Install wg-quick on server
 2. Create wireguard config file `/etc/wireguard/wg0.conf`\
