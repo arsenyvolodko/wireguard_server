@@ -78,7 +78,7 @@ class WireguardTools:
     @staticmethod
     def _sync_config():
         subprocess.check_call(
-            f"{SYNC_CONFIG_FILE_PATH} {WG_CONFIG_NAME}",
+            f"bash {SYNC_CONFIG_FILE_PATH} {WG_CONFIG_NAME}",
             shell=True,
         )
 
