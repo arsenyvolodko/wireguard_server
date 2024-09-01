@@ -23,3 +23,4 @@ ENV PYTHONUNBUFFERED=1 \
 
 ARG SYNC_CONFIG_FILE_PATH
 RUN chmod +x "$SYNC_CONFIG_FILE_PATH"
+RUN chmod +x /app/wireguard/sync_config.sh
