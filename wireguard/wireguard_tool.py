@@ -33,8 +33,12 @@ class WireguardTools:
 
     @staticmethod
     def _exec_cmd(cmd: str) -> bool:
-        full_cmd = (f"bash -c 'docker exec {config.WG_CONTAINER_NAME} {cmd} && "
-                    f"docker exec {config.WG_CONTAINER_NAME} wg-quick save {config.WG_CONFIG_NAME}'")
+        full_cmd = (f"bash -c '"
+                    f"docker exec {config.WG_CONTAINER_NAME} {cmd} && "
+                    f"docker exec {config.WG_CONTAINER_NAME} wg-quick save {config.WG_CONFIG_NAME} && "
+                    f"docker exec {config.WG_CONTAINER_NAME} wg-quick down {config.WG_CONFIG_NAME} && "
+                    f"docker exec {config.WG_CONTAINER_NAME} wg-quick up {config.WG_CONFIG_NAME}'")
+
         result = subprocess.run(
             full_cmd, capture_output=True, text=True, shell=True
         )
