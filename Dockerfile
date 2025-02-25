@@ -3,9 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wireguard-tools \
-    iproute2 \
-    iptables \
+    docker.io \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,6 +18,3 @@ COPY . .
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH='/app'
-
-ARG SYNC_CONFIG_FILE_PATH
-RUN chmod +x "$SYNC_CONFIG_FILE_PATH"

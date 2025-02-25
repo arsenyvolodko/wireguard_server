@@ -1,21 +1,39 @@
 version: '3'
 services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: ${WG_CONTAINER_NAME}
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+      - SERVERURL=auto
+      - SERVERPORT=51820
+      - PEERDNS=auto
+      - PEERS=0
+      - INTERNAL_SUBNET=10.66.0.0/16
+      - ALLOWEDIPS=0.0.0.0/0
+    volumes:
+      - /lib/modules:/lib/modules
+      - ./config:/config
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+
   fast_api:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        SYNC_CONFIG_FILE_PATH: ${SYNC_CONFIG_FILE_PATH}
-    volumes:
-      - ${WG_CONFIG_PATH}:${WG_CONFIG_PATH}
-      - ${SOURCE_SYNC_CONFIG_FILE_PATH}:${SYNC_CONFIG_FILE_PATH}
     env_file:
       - .env
-    network_mode: "host"
-    privileged: true
-    command: uvicorn api.main:app --host 0.0.0.0 --port ${FAST_API_PORT}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: uvicorn server.api.main:app --host 0.0.0.0 --port 8080
     ports:
-      - "${FAST_API_PORT}:${FAST_API_PORT}"
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
+      - "8080:8080"
+    restart: on-failure

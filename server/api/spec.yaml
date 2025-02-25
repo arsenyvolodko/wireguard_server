@@ -1,0 +1,49 @@
+openapi: 3.0.1
+info:
+  title: Wireguard Server
+  version: '1.0'
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /api/v1/client/{public_key}:
+    parameters:
+      - name: public_key
+        in: path
+        description: Public key of the client
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: API Key for authentication
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Add client
+      tags:
+        - client
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddClientRequest'
+      responses:
+        201:
+          description: Created
+    delete:
+      summary: Delete client
+      tags:
+        - client
+      responses:
+        204:
+          description: No content
+
+components:
+  schemas:
+    AddClientRequest:
+      required:
+        - ip
+      properties:
+        ip:
+          type: string
