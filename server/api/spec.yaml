@@ -5,14 +5,8 @@ info:
 servers:
   - url: http://127.0.0.1:8080
 paths:
-  /api/v1/client/{public_key}:
+  /api/v1/client/:
     parameters:
-      - name: public_key
-        in: path
-        description: Public key of the client
-        required: true
-        schema:
-          type: string
       - name: x-api-key
         in: header
         description: API Key for authentication
@@ -35,6 +29,44 @@ paths:
       summary: Delete client
       tags:
         - client
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveClientRequest'
+      responses:
+        204:
+          description: No content
+
+  /api/v1/clients/:
+    parameters:
+      - name: x-api-key
+        in: header
+        description: API Key for authentication
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Add clients
+      tags:
+        - clients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddClientsRequest'
+      responses:
+        201:
+          description: Created
+    delete:
+      summary: Delete clients
+      tags:
+        - clients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveClientsRequest'
       responses:
         204:
           description: No content
@@ -43,7 +75,32 @@ components:
   schemas:
     AddClientRequest:
       required:
+        - public_key
         - ip
       properties:
         ip:
           type: string
+        public_key:
+          type: string
+    RemoveClientRequest:
+      required:
+        - public_key
+      properties:
+        public_key:
+          type: string
+    AddClientsRequest:
+      required:
+        - clients
+      properties:
+        clients:
+          type: array
+          items:
+              $ref: '#/components/schemas/AddClientRequest'
+    RemoveClientsRequest:
+        required:
+            - clients
+        properties:
+            clients:
+              type: array
+              items:
+                  $ref: '#/components/schemas/RemoveClientRequest'

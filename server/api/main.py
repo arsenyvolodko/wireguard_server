@@ -1,10 +1,10 @@
 from logging.config import dictConfig
 
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 
-from server.api.dto import ClientRequest
+from server.api.dto.client import AddClientsRequest, AddClientRequest, RemoveClientsRequest, RemoveClientRequest
 from server.core.logging import log_config
-from server.enums import MethodEnum
+from server.enums import ActionEnum
 from config import API_KEY
 from wireguard.wireguard_tool import WireguardTools
 
@@ -12,31 +12,58 @@ app = FastAPI()
 dictConfig(log_config)
 
 
-@app.post("/api/v1/client/{public_key}", status_code=201)
-async def add_client(request: Request, public_key: str, x_api_key: str = Header(None)):
-    await _handle_request_util(request, public_key, x_api_key)
+@app.post("/api/v1/client/", status_code=201)
+async def add_client(request_data: AddClientRequest, x_api_key: str = Header(None)):
+    await _add_clients_util(request_data, x_api_key)
 
 
-@app.delete("/api/v1/client/{public_key}", status_code=204)
-async def remove_client(request: Request, public_key: str, x_api_key: str = Header(None)):
-    await _handle_request_util(request, public_key, x_api_key)
+@app.delete("/api/v1/client/", status_code=204)
+async def remove_client(request_data: RemoveClientRequest, x_api_key: str = Header(None)):
+    await _remove_clients_util(request_data, x_api_key)
 
 
-async def _handle_request_util(request: Request, public_key: str, x_api_key: str):
+@app.post("/api/v1/clients/", status_code=201)
+async def add_clients(request_data: AddClientsRequest, x_api_key: str = Header(None)):
+    await _add_clients_util(request_data, x_api_key)
+
+
+@app.delete("/api/v1/clients/", status_code=204)
+async def remove_clients(request_data: RemoveClientsRequest, x_api_key: str = Header(None)):
+    await _remove_clients_util(request_data, x_api_key)
+
+
+def _check_api_key(x_api_key: str):
     if x_api_key != API_KEY:
         raise HTTPException(status_code=403)
 
-    try:
-        method = MethodEnum(value=request.method)
-        if method == MethodEnum.POST:
-            body = await request.json()
-            client_request = ClientRequest.parse_obj(body)
-            success = WireguardTools.add_client(public_key, client_request)
-        else:
-            success = WireguardTools.remove_client(public_key)
 
-    except ValueError as e:
-        raise HTTPException(detail=str(e), status_code=400)
+async def _process_clients_util(
+        request_data, x_api_key: str, action: str, single_model, batch_model, wg_method
+):
+    _check_api_key(x_api_key)
 
-    if not success:
-        raise HTTPException(status_code=400)
+    if isinstance(request_data, single_model):
+        request_data = batch_model(clients=[request_data])
+
+    if not wg_method(request_data):
+        raise HTTPException(status_code=400, detail=f"Failed to {action} clients")
+
+
+async def _add_clients_util(request_data: AddClientRequest | AddClientsRequest, x_api_key: str):
+    await _process_clients_util(
+        request_data, x_api_key,
+        action=ActionEnum.ADD,
+        single_model=AddClientRequest,
+        batch_model=AddClientsRequest,
+        wg_method=WireguardTools.add_clients
+    )
+
+
+async def _remove_clients_util(request_data: RemoveClientRequest | RemoveClientsRequest, x_api_key: str):
+    await _process_clients_util(
+        request_data, x_api_key,
+        action=ActionEnum.REMOVE,
+        single_model=RemoveClientRequest,
+        batch_model=RemoveClientsRequest,
+        wg_method=WireguardTools.remove_clients
+    )
