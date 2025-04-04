@@ -3,7 +3,12 @@ info:
   title: Wireguard Server
   version: '1.0'
 servers:
-  - url: http://127.0.0.1:8080
+  - description: russia
+    url: http://85.198.109.71:8080
+  - description: netherlands
+    url: http://77.238.236.90:8080
+  - description: localhost
+    url: http://127.0.0.1:8080
 paths:
   /api/v1/client/:
     parameters:
