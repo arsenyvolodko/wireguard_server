@@ -1,0 +1,279 @@
+components:
+  schemas:
+
+    OrderItemDTOType:
+      type: string
+      enum: [Product, Compound, Service]
+
+    CreateOrderSettingsDTO:
+      type: object
+      properties:
+        servicePrint:            { type: boolean, nullable: true }
+        transportToFrontTimeout: { type: integer, nullable: true }
+        checkStopList:           { type: boolean, default: false }
+
+    OrderItemModifierDTO:
+      type: object
+      required: [productId, amount]
+      properties:
+        productId:      { type: string, format: uuid }
+        amount:         { type: integer }
+        price:          { type: string, format: decimal, nullable: true }
+        productGroupId: { type: string, format: uuid, nullable: true }
+        positionId:     { type: string, format: uuid, nullable: true }
+        productSizeId:  { type: string, format: uuid, nullable: true }
+
+    ItemComboInformationDTO:
+      type: object
+      required: [comboId, comboSourceId, comboGroupId]
+      properties:
+        comboId:       { type: string, format: uuid }
+        comboSourceId: { type: string, format: uuid }
+        comboGroupId:  { type: string, format: uuid }
+
+    OrderItemDTO:
+      type: object
+      required: [productId, price, type, amount]
+      properties:
+        productId:        { type: string, format: uuid }
+        price:            { type: string, format: decimal }
+        type:             { $ref: '#/components/schemas/OrderItemDTOType' }
+        amount:           { type: number, format: float }
+        productSizeId:    { type: string, format: uuid, nullable: true }
+        comment:          { type: string, nullable: true }
+        modifiers:
+          type: array
+          default: []
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderItemModifierDTO' }
+              - { type: 'null' }
+        positionId:       { type: string, format: uuid, nullable: true }
+        comboInformation: { $ref: '#/components/schemas/ItemComboInformationDTO', nullable: true }
+
+    DetailDiscountOrderItemDTO:
+      type: object
+      required: [name, discount]
+      properties:
+        name:     { type: string }
+        discount: { type: string }
+
+    BaseDiscountOrderItemDTO:
+      type: object
+      properties:
+        discounts:
+          type: array
+          default: []
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/DetailDiscountOrderItemDTO' }
+              - { type: 'null' }
+        totalPrice: { type: string, format: decimal, nullable: true }
+        delta:      { type: string, format: decimal, default: '0' }
+
+    DiscountOrderItemModifierDTO:
+      allOf:
+        - { $ref: '#/components/schemas/OrderItemModifierDTO' }
+        - { $ref: '#/components/schemas/BaseDiscountOrderItemDTO' }
+
+    DiscountOrderItemDTO:
+      allOf:
+        - { $ref: '#/components/schemas/OrderItemDTO' }
+        - { $ref: '#/components/schemas/BaseDiscountOrderItemDTO' }
+        - type: object
+          properties:
+            modifiers:
+              type: array
+              default: []
+              items:
+                oneOf:
+                  - { $ref: '#/components/schemas/DiscountOrderItemModifierDTO' }
+                  - { type: 'null' }
+
+    ComponentDTO:
+      type: object
+      required: [productId, price]
+      properties:
+        productId:     { type: string, format: uuid }
+        price:         { type: string, format: decimal }
+        productSizeId: { type: string, format: uuid, nullable: true }
+        modifiers:
+          type: array
+          default: []
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderItemModifierDTO' }
+              - { type: 'null' }
+
+    SimpleComponentDTO:
+      type: object
+      required: [productId]
+      properties:
+        productId:  { type: string, format: uuid }
+        modifiers:
+          type: array
+          nullable: true
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderItemModifierDTO' }
+              - { type: 'null' }
+        price:      { type: string, format: decimal, nullable: true }
+        positionId: { type: string, format: uuid, nullable: true }
+
+    CompoundOrderItemDTO:
+      type: object
+      required: [primaryComponent, amount]
+      properties:
+        primaryComponent: { $ref: '#/components/schemas/SimpleComponentDTO' }
+        amount:           { type: number, format: float }
+        type:             { type: string, default: Compound }
+        productSizeId:    { type: string, format: uuid, nullable: true }
+        commonModifiers:
+          type: array
+          nullable: true
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderItemModifierDTO' }
+              - { type: 'null' }
+        comment:          { type: string, nullable: true }
+        modifiers:
+          type: array
+          nullable: true
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderItemModifierDTO' }
+              - { type: 'null' }
+
+    OrderComboDTO:
+      type: object
+      required: [id, name, amount, price, sourceId]
+      properties:
+        id:        { type: string, format: uuid }
+        name:      { type: string }
+        amount:    { type: integer }
+        price:     { type: string, format: decimal }
+        sourceId:  { type: string, format: uuid }
+        programId: { type: string, format: uuid, nullable: true }
+        sizeId:    { type: string, format: uuid, nullable: true }
+
+    PaymentAdditionalDataDTO:
+      type: object
+      required: [credential]
+      properties:
+        credential:  { type: string }
+        type:        { type: string, enum: [LoyaltyCard], default: LoyaltyCard }
+        searchScope: { type: string, enum: [Phone],       default: Phone }
+
+    OrderPaymentDTO:
+      type: object
+      required: [sum]
+      properties:
+        sum:                    { type: string, format: decimal }
+        paymentAdditionalData:  { $ref: '#/components/schemas/PaymentAdditionalDataDTO', nullable: true }
+        paymentTypeKind:        { type: string, default: Card }
+        paymentTypeId:          { type: string, default: '' }
+        isProcessedExternally:  { type: boolean, default: true }
+        isFiscalizedExternally: { type: boolean, default: true }
+        isPrepay:               { type: boolean, default: false }
+
+    ChequeAdditionalInfoDTO:
+      type: object
+      required: [needReceipt]
+      properties:
+        needReceipt:     { type: boolean }
+        email:           { type: string, format: email, nullable: true }
+        settlementPlace: { type: string, nullable: true }
+        phone:           { type: string, nullable: true }
+
+    CustomerDTO:
+      type: object
+      properties:
+        id:   { type: string, format: uuid, nullable: true }
+        name: { type: string, nullable: true }
+        type: { type: string, default: regular }
+
+    DiscountItemOrder:
+      type: object
+      required: [positionId, sum, amount]
+      properties:
+        positionId: { type: string, format: uuid }
+        sum:        { type: number, format: float }
+        amount:     { type: number, format: float }
+
+    DiscountsObjectOrder:
+      type: object
+      required: [programId, programName, discountItems]
+      properties:
+        programId:     { type: string, format: uuid }
+        programName:   { type: string }
+        discountItems:
+          type: array
+          items: { $ref: '#/components/schemas/DiscountItemOrder' }
+        type:          { type: string, default: iikoCard }
+
+    DiscountsInfoOrder:
+      type: object
+      properties:
+        discounts:
+          type: array
+          default: []
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/DiscountsObjectOrder' }
+              - { type: 'null' }
+        fixedLoyaltyDiscounts:
+          type: boolean
+          default: true
+          description: параметр отключения или полного переназначения скидок iikoCard
+
+    OrderOrderDTO:
+      type: object
+      properties:
+        payments:
+          type: array
+          nullable: true
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderPaymentDTO' }
+              - { type: 'null' }
+        id:                  { type: string, format: uuid, nullable: true }
+        externalNumber:      { type: string, nullable: true }
+        customer:            { $ref: '#/components/schemas/CustomerDTO', nullable: true }
+        phone:               { type: string, nullable: true }
+        tabName:             { type: string, nullable: true }
+        items:
+          type: array
+          default: []
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderItemDTO' }
+              - { $ref: '#/components/schemas/CompoundOrderItemDTO' }
+              - { type: 'null' }
+        combos:
+          type: array
+          default: []
+          items:
+            oneOf:
+              - { $ref: '#/components/schemas/OrderComboDTO' }
+              - { type: 'null' }
+        orderTypeId:         { type: string, format: uuid, nullable: true }
+        chequeAdditionalInfo:{ $ref: '#/components/schemas/ChequeAdditionalInfoDTO', nullable: true }
+        tableIds:
+          type: array
+          nullable: true
+          items: { type: string, format: uuid }
+        sourceKey:           { type: string, nullable: true, description: settings.IIKO_ORDER_SOURCE_KEY_QR }
+        discountsInfo:       { $ref: '#/components/schemas/DiscountsInfoOrder', nullable: true }
+        externalData:
+          type: array
+          nullable: true
+          items: {}
+
+    OrderDTO:
+      type: object
+      required: [organizationId, terminalGroupId, order]
+      properties:
+        organizationId:       { type: string, format: uuid }
+        terminalGroupId:      { type: string, format: uuid }
+        order:                { $ref: '#/components/schemas/OrderOrderDTO' }
+        createOrderSettings:  { $ref: '#/components/schemas/CreateOrderSettingsDTO', nullable: true }
